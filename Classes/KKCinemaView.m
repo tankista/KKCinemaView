@@ -11,24 +11,19 @@
 #define DEFAULT_COL_SPACING 1
 #define DEFAULT_ROW_SPACING 1
 
-typedef struct {
-    NSUInteger row;
-    NSUInteger col;
-} KKSeatLocation;
-
 @implementation KKCinemaView
 {
     UIEdgeInsets    _edgeInsets;    //this insets drawing rect from view's edges
-    CGFloat         _rowsPadding;   //padding between 2 rows
     
-    UIPanGestureRecognizer*      _panGesture;
+    UIPanGestureRecognizer* _panGesture;
+    NSMutableArray*         _rowOriginsY;
 }
 
 - (void)awakeFromNib
 {
     [super awakeFromNib];
     
-    _edgeInsets = UIEdgeInsetsMake(30, 30, 30, 30);
+    _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
     
     _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
     _panGesture.maximumNumberOfTouches = 1;
@@ -37,9 +32,36 @@ typedef struct {
 
 - (void)panGestureRecognized:(UIPanGestureRecognizer*)recongizer
 {
-    CGPoint translatedPoint = [recongizer translationInView:self];
+    CGPoint panPoint = [recongizer locationInView:self];
+    
+    if ([recongizer state] == UIGestureRecognizerStateBegan) {
+        NSLog(@"Began");
+        NSLog(@"%@", _rowOriginsY);
+        
+        //find row
+        CGRect drawingRect = UIEdgeInsetsInsetRect(self.frame, _edgeInsets);
+        CGFloat distanceY = panPoint.y - drawingRect.origin.y;
+        
+        __block NSUInteger rowIndex = NSUIntegerMax;
+        [_rowOriginsY enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSNumber* distanceNumber, NSUInteger idx, BOOL *stop) {
+            
+            if ([distanceNumber floatValue] <= distanceY) {
+                rowIndex = idx;
+                *stop = YES;
+            }
+        }];
+        
+        if (rowIndex < NSUIntegerMax) {
+            NSLog(@"found row: %i", rowIndex);
+        }
+    }
+    
     if ([recongizer state] == UIGestureRecognizerStateChanged) {
-        NSLog(@"%@", NSStringFromCGPoint(translatedPoint));
+        NSLog(@"%@", NSStringFromCGPoint(panPoint));
+    }
+    
+    if ([recongizer state] == UIGestureRecognizerStateRecognized || [recongizer state] == UIGestureRecognizerStateCancelled) {
+        NSLog(@"Ended");
     }
 }
 
@@ -52,16 +74,9 @@ typedef struct {
 
 - (void)drawRect:(CGRect)rect
 {
-    CGColorRef redRawColor    = [UIColor redColor].CGColor;
-//    CGColorRef greenRawColor  = [UIColor greenColor].CGColor;
-//    CGColorRef blueRawColor   = [UIColor blueColor].CGColor;
-    
     CGContextRef context = UIGraphicsGetCurrentContext();
     
-    CGRect drawingRect = CGRectMake(_edgeInsets.left,
-                                    _edgeInsets.top,
-                                    CGRectGetWidth(rect) - (_edgeInsets.left + _edgeInsets.right),
-                                    CGRectGetHeight(rect) - (_edgeInsets.top + _edgeInsets.bottom));
+    CGRect drawingRect = UIEdgeInsetsInsetRect(rect, _edgeInsets);
     
     CGContextClipToRect(context, drawingRect);
     
@@ -82,6 +97,8 @@ typedef struct {
     CGSize seatSize = CGSizeMake(seatWidth, seatHeight);
     
     CGFloat previousRowOriginY = drawingRect.origin.y;
+    _rowOriginsY = [[NSMutableArray alloc] initWithCapacity:numberOfRows];
+    
     
     for (int row = 0; row < numberOfRows; row++) {
     
@@ -92,17 +109,19 @@ typedef struct {
         CGFloat rowSpacing = DEFAULT_ROW_SPACING;
         if (row > 0 && row < numberOfRows) {
             if ([_dataSource respondsToSelector:@selector(cinemaView:interRowSpacingForRow:)]) {
-                rowSpacing = [_dataSource cinemaView:self interRowSpacingForRow:rowSpacing];
+                rowSpacing = [_dataSource cinemaView:self interRowSpacingForRow:row];
             }
+            rowOriginY += rowSpacing;
         }
-        rowOriginY += rowSpacing;
+        rowOriginY += seatSize.height;
         previousRowOriginY = rowOriginY;
+        [_rowOriginsY addObject:@(previousRowOriginY)];
         
         //calculate seat position
         CGRect seatRect = CGRectZero;
-        seatRect.origin.y = rowOriginY + row * seatSize.height;
+        seatRect.origin.y = rowOriginY;
         seatRect.size = seatSize;
-        
+
         for (int col = 0; col < numberOfCols; col++) {
             
             CGFloat colOriginX = previousColOriginX;
@@ -112,19 +131,61 @@ typedef struct {
             previousColOriginX = colOriginX;
             
             seatRect.origin.x = colOriginX + col * seatSize.width;
-            drawSeat(context, seatRect, redRawColor);
+            
+            KKSeatLocation location;
+            location.row = row;
+            location.col = col;
+            
+            KKSeatType seatType = [_dataSource cinemaView:self seatTypeForLocation:location];
+            
+            drawSeat(context, seatRect, location, seatType);
         }
     }
 }
 
-
-
-void drawSeat(CGContextRef context, CGRect rect, CGColorRef color)
+void drawSeat(CGContextRef context, CGRect rect, KKSeatLocation location, KKSeatType type)
 {
     CGContextSaveGState(context);
-    CGContextSetFillColorWithColor(context, color);
+    CGContextSetFillColorWithColor(context, colorRefForSeatType(type));
     CGContextFillRect(context, rect);
     CGContextRestoreGState(context);
+}
+
+CGColorRef colorRefForSeatType(KKSeatType type)
+{
+    if (type == KKSeatTypeNone) {
+        static dispatch_once_t onceToken;
+        static CGColorRef color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor whiteColor].CGColor;
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeFree) {
+        static dispatch_once_t onceToken;
+        static CGColorRef color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor blueColor].CGColor;
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeReserved) {
+        static dispatch_once_t onceToken;
+        static CGColorRef color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor redColor].CGColor;
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeSelected) {
+        static dispatch_once_t onceToken;
+        static CGColorRef color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor greenColor].CGColor;
+        });
+        return color;
+    }
+    return NULL;
 }
 
 @end
