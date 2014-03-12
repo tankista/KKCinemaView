@@ -22,6 +22,10 @@ typedef struct {
     NSUInteger col;
 } KKSeatLocation;
 
+extern const KKSeatLocation KKSeatLocationInvalid;
+bool KKSeatLocationIsInvalid(KKSeatLocation location);
+NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
+
 @protocol KKCinemaViewDataSource <NSObject>
 
 - (NSUInteger)numberOfRowsInCinemaView:(KKCinemaView*)cinemaView;

@@ -8,56 +8,127 @@
 
 #import "KKCinemaView.h"
 
+const KKSeatLocation KKSeatLocationInvalid = {NSNotFound, NSNotFound};
+
+bool KKSeatLocationIsInvalid(KKSeatLocation location)
+{
+    return location.row == NSNotFound || location.col == NSNotFound;
+}
+
+NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
+{
+    if (KKSeatLocationIsInvalid(location)) {
+        return @"KKSeatLocationInvalid";
+    }
+    else {
+        return [NSString stringWithFormat:@"{%i, %i}", location.row, location.col];
+    }
+}
+
 #define DEFAULT_COL_SPACING 1
 #define DEFAULT_ROW_SPACING 1
 
 @implementation KKCinemaView
 {
-    UIEdgeInsets    _edgeInsets;    //this insets drawing rect from view's edges
+    UIEdgeInsets            _edgeInsets;    //this insets drawing rect from view's edges
     
-    UIPanGestureRecognizer* _panGesture;
+    NSUInteger              _numberOfRows;
+    NSUInteger              _numberOfCols;
+    
+    UIPanGestureRecognizer* _panGestureRecognizer;
+    UITapGestureRecognizer* _tapGestureRecognizer;
+    
     NSMutableArray*         _rowOriginsY;
+    CGFloat                 _colSpacing;
+    
+    NSUInteger              _panGestureRowIndex;
+    NSUInteger              _panGestureColIndex;
+    
+    CGSize                  _seatSize;
 }
 
 - (void)awakeFromNib
 {
     [super awakeFromNib];
-    
+
     _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
+
+    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
+    _panGestureRecognizer.maximumNumberOfTouches = 1;
+    [self addGestureRecognizer:_panGestureRecognizer];
     
-    _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
-    _panGesture.maximumNumberOfTouches = 1;
-    [self addGestureRecognizer:_panGesture];
+    _panGestureColIndex = NSNotFound;
+    _panGestureRowIndex = NSNotFound;
+    
+    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
+    _tapGestureRecognizer.numberOfTapsRequired = 1;
+    [self addGestureRecognizer:_tapGestureRecognizer];
 }
 
-- (void)panGestureRecognized:(UIPanGestureRecognizer*)recongizer
+- (void)panGestureRecognized:(UIPanGestureRecognizer*)recognizer
 {
-    CGPoint panPoint = [recongizer locationInView:self];
+    CGPoint panPoint = [recognizer locationInView:self];
+//    if (CGRectContainsPoint(<#CGRect rect#>, <#CGPoint point#>)) {
+//        <#statements#>
+//    }
     
-    if ([recongizer state] == UIGestureRecognizerStateBegan) {
-        NSLog(@"Began");
-        
-        //find row
-        __block NSUInteger rowIndex = NSUIntegerMax;
-        [_rowOriginsY enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSNumber* distanceNumber, NSUInteger idx, BOOL *stop) {
-            if ([distanceNumber floatValue] <= panPoint.y) {
-                rowIndex = idx;
-                *stop = YES;
-            }
-        }];
-        
-        if (rowIndex < NSUIntegerMax) {
-            NSLog(@"found row: %i", rowIndex);
+    if ([recognizer state] == UIGestureRecognizerStateBegan) {
+        _panGestureRowIndex = [self rowIndexForPoint:panPoint];
+    }
+    
+    if ([recognizer state] == UIGestureRecognizerStateChanged) {
+        _panGestureColIndex = [self colIndexForPoint:panPoint];
+        KKSeatLocation location = {_panGestureRowIndex, _panGestureColIndex};
+        [self didSelectSeatAtLocation:location];
+    }
+    
+    if ([recognizer state] == UIGestureRecognizerStateRecognized || [recognizer state] == UIGestureRecognizerStateCancelled) {
+        _panGestureColIndex = NSNotFound;
+        _panGestureRowIndex = NSNotFound;
+    }
+}
+
+- (void)tapGestureRecognized:(UITapGestureRecognizer*)recognizer
+{
+    CGPoint tapPoint = [recognizer locationInView:self];
+    
+    if ([recognizer state] == UIGestureRecognizerStateRecognized) {
+        KKSeatLocation location = {[self rowIndexForPoint:tapPoint], [self colIndexForPoint:tapPoint]};
+        [self didSelectSeatAtLocation:location];
+    }
+}
+
+- (void)didSelectSeatAtLocation:(KKSeatLocation)location
+{
+    if (KKSeatLocationIsInvalid(location) == NO) {
+        NSLog(@"%@", NSStringFromKKSeatLocation(location));
+    }
+}
+
+- (NSUInteger)rowIndexForPoint:(CGPoint)point
+{
+    __block NSUInteger rowIndex = NSNotFound;
+    [_rowOriginsY enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSNumber* distanceNumber, NSUInteger idx, BOOL *stop) {
+        if ([distanceNumber floatValue] <= point.y) {
+            rowIndex = idx;
+            *stop = YES;
+        }
+    }];
+    return rowIndex;
+}
+
+- (NSUInteger)colIndexForPoint:(CGPoint)point
+{
+    NSUInteger colIndex = NSNotFound;
+    for (int col = 0; col < _numberOfCols; col++) {
+        CGFloat cumColSpacing = (col > 0 && col < _numberOfCols-1) ? (col-1) * _colSpacing : 0;
+        CGFloat colOriginX = _edgeInsets.left + col * _seatSize.width + cumColSpacing;
+        if (colOriginX > point.x) {
+            colIndex = col;
+            break;
         }
     }
-    
-    if ([recongizer state] == UIGestureRecognizerStateChanged) {
-        NSLog(@"%@", NSStringFromCGPoint(panPoint));
-    }
-    
-    if ([recongizer state] == UIGestureRecognizerStateRecognized || [recongizer state] == UIGestureRecognizerStateCancelled) {
-        NSLog(@"Ended");
-    }
+    return colIndex;
 }
 
 - (void)reloadData
@@ -75,57 +146,57 @@
     
     CGContextClipToRect(context, drawingRect);
     
-    NSUInteger numberOfRows = [_dataSource numberOfRowsInCinemaView:self];
-    NSAssert(numberOfRows > 0, @"You must specify number of rows");
+    _numberOfRows = [_dataSource numberOfRowsInCinemaView:self];
+    NSAssert(_numberOfRows > 0, @"You must specify number of rows");
     
-    NSUInteger numberOfCols = [_dataSource numberOfColsInCinemaView:self];
-    NSAssert(numberOfCols > 0, @"You must specify number of rows");
+    _numberOfCols = [_dataSource numberOfColsInCinemaView:self];
+    NSAssert(_numberOfCols > 0, @"You must specify number of rows");
     
-    CGFloat colSpacing = DEFAULT_COL_SPACING;
+    _colSpacing = DEFAULT_COL_SPACING;
     if ([_dataSource respondsToSelector:@selector(interColSpacingInCinemaView:)]) {
-        colSpacing = [_dataSource interColSpacingInCinemaView:self];
+        _colSpacing = [_dataSource interColSpacingInCinemaView:self];
     }
     
     //calcuclate seat size
-    CGFloat seatWidth = floorf((CGRectGetWidth(drawingRect) - (numberOfCols-1)*colSpacing)/numberOfCols);
+    CGFloat seatWidth = floorf((CGRectGetWidth(drawingRect) - (_numberOfCols-1)*_colSpacing)/_numberOfCols);
     CGFloat seatHeight = seatWidth;
-    CGSize seatSize = CGSizeMake(seatWidth, seatHeight);
+    _seatSize = CGSizeMake(seatWidth, seatHeight);
     
     CGFloat previousRowOriginY = drawingRect.origin.y;
-    _rowOriginsY = [[NSMutableArray alloc] initWithCapacity:numberOfRows];
+    _rowOriginsY = [[NSMutableArray alloc] initWithCapacity:_numberOfRows];
     
     
-    for (int row = 0; row < numberOfRows; row++) {
+    for (int row = 0; row < _numberOfRows; row++) {
     
         CGFloat previousColOriginX = drawingRect.origin.x;
         
         //Calculate row spacing. If not first or last row, ask for interrow spacing
         CGFloat rowOriginY = previousRowOriginY;
         CGFloat rowSpacing = DEFAULT_ROW_SPACING;
-        if (row > 0 && row < numberOfRows) {
+        if (row > 0 && row < _numberOfRows) {
             if ([_dataSource respondsToSelector:@selector(cinemaView:interRowSpacingForRow:)]) {
                 rowSpacing = [_dataSource cinemaView:self interRowSpacingForRow:row];
             }
             rowOriginY += rowSpacing;
         }
-        rowOriginY += seatSize.height;
+        rowOriginY += _seatSize.height;
         previousRowOriginY = rowOriginY;
         [_rowOriginsY addObject:@(previousRowOriginY)];
         
         //calculate seat position
         CGRect seatRect = CGRectZero;
         seatRect.origin.y = rowOriginY;
-        seatRect.size = seatSize;
+        seatRect.size = _seatSize;
 
-        for (int col = 0; col < numberOfCols; col++) {
+        for (int col = 0; col < _numberOfCols; col++) {
             
             CGFloat colOriginX = previousColOriginX;
             if (col > 0) {
-                colOriginX += colSpacing;
+                colOriginX += _colSpacing;
             }
             previousColOriginX = colOriginX;
             
-            seatRect.origin.x = colOriginX + col * seatSize.width;
+            seatRect.origin.x = colOriginX + col * _seatSize.width;
             
             KKSeatLocation location;
             location.row = row;
@@ -182,5 +253,7 @@ CGColorRef colorRefForSeatType(KKSeatType type)
     }
     return NULL;
 }
+
+
 
 @end
