@@ -24,6 +24,7 @@ typedef struct {
 
 extern const KKSeatLocation KKSeatLocationInvalid;
 bool KKSeatLocationIsInvalid(KKSeatLocation location);
+bool KSeatLocationEqualsToLocation(KKSeatLocation location, KKSeatLocation otherLocation);
 NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 
 @protocol KKCinemaViewDataSource <NSObject>
@@ -47,9 +48,32 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 
 @end
 
+@protocol KKCinemaViewDelegate <NSObject>
+
+@optional
+
+/**
+ * Determine whether a seat should be selected at given location. Default is YES.
+ *
+ * @return NO if seat can not be selected. If you return YES, as a consequence, 
+ * cinemaView:didSelectSeatAtLocation: will be called.
+ */
+- (BOOL)cinemaView:(KKCinemaView*)view shouldSelectSeatAtLocation:(KKSeatLocation)location;
+
+//TODO: to be implemented
+//- (void)cinemaView:(KKCinemaView*)view didSelectSeatAtLocation:(KKSeatLocation)location;
+//- (void)cinemaView:(KKCinemaView*)view didDeSelectSeatAtLocation:(KKSeatLocation)location;
+
+@end
+
 @interface KKCinemaView : UIView
 
 @property (nonatomic, weak) IBOutlet id<KKCinemaViewDataSource> dataSource;
+
+/**
+ * Forces KKCinemaView to reload it's data using dataSource and redraw whole seat layout
+ */
+- (void)reloadData;
 
 //TODO:
 //- add property for seat drawing block
