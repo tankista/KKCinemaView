@@ -19,6 +19,6 @@
 
 @interface KKCinemaView : UIView
 
-@property (nonatomic, weak) id<KKCinemaViewDataSource> dataSource;
+@property (nonatomic, weak) IBOutlet id<KKCinemaViewDataSource> dataSource;
 
 @end

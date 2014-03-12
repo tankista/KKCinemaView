@@ -17,13 +17,20 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
 }
 
-- (void)didReceiveMemoryWarning
+#pragma mark
+#pragma mark KKCinemaViewDataSource Methods
+
+
+- (NSUInteger)numberOfRowsInCinemaView:(KKCinemaView*)cinemaView
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    return 10;
+}
+
+- (NSUInteger)cinemaView:(KKCinemaView*)cinemaView numberOfSeatsInRow:(NSUInteger)row
+{
+    return 14;
 }
 
 @end
