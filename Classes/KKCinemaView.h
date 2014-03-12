@@ -13,7 +13,21 @@
 @protocol KKCinemaViewDataSource <NSObject>
 
 - (NSUInteger)numberOfRowsInCinemaView:(KKCinemaView*)cinemaView;
-- (NSUInteger)cinemaView:(KKCinemaView*)cinemaView numberOfSeatsInRow:(NSUInteger)row;
+- (NSUInteger)numberOfColsInCinemaView:(KKCinemaView*)cinemaView;
+//- (NSUInteger)cinemaView:(KKCinemaView*)cinemaView numberOfSeatsInRow:(NSUInteger)row;
+
+@optional
+
+/**
+ * Asks for height of a gap, between 2 rows. Specified *row* is row that is being offset.
+ * Default value is 1;
+ */
+- (CGFloat)cinemaView:(KKCinemaView*)cinemaView interRowSpacingForRow:(NSUInteger)row;
+
+/**
+ * Space between cols. Default value is 1;
+ */
+- (CGFloat)interColSpacingInCinemaView:(KKCinemaView*)cinemaView;
 
 @end
 
