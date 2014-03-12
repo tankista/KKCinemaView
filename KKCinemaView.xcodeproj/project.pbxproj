@@ -15,7 +15,6 @@
 		422327C918D06D9200DAF42C /* KKCinemaViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 422327C818D06D9200DAF42C /* KKCinemaViewController.m */; };
 		422327CB18D06D9200DAF42C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 422327CA18D06D9200DAF42C /* Images.xcassets */; };
 		422327E918D0705F00DAF42C /* KKCinemaView.m in Sources */ = {isa = PBXBuildFile; fileRef = 422327E818D0705F00DAF42C /* KKCinemaView.m */; };
-		422327EC18D07E4F00DAF42C /* KKCinemaViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 422327EB18D07E4F00DAF42C /* KKCinemaViewDataSource.m */; };
 		422327F018D0882F00DAF42C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 422327EF18D0882F00DAF42C /* main.m */; };
 		422327F418D089E100DAF42C /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 422327C118D06D9200DAF42C /* Main_iPhone.storyboard */; };
 		422327F518D089E100DAF42C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 422327C418D06D9200DAF42C /* Main_iPad.storyboard */; };
@@ -37,8 +36,6 @@
 		422327D118D06D9200DAF42C /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		422327E718D0705F00DAF42C /* KKCinemaView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KKCinemaView.h; sourceTree = "<group>"; };
 		422327E818D0705F00DAF42C /* KKCinemaView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KKCinemaView.m; sourceTree = "<group>"; };
-		422327EA18D07E4F00DAF42C /* KKCinemaViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KKCinemaViewDataSource.h; sourceTree = "<group>"; };
-		422327EB18D07E4F00DAF42C /* KKCinemaViewDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KKCinemaViewDataSource.m; sourceTree = "<group>"; };
 		422327EF18D0882F00DAF42C /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		422327F118D0891C00DAF42C /* KKCinemaView-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "KKCinemaView-Info.plist"; sourceTree = "<group>"; };
 		422327F218D0891C00DAF42C /* KKCinemaView-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "KKCinemaView-Prefix.pch"; sourceTree = "<group>"; };
@@ -89,17 +86,14 @@
 		422327B518D06D9200DAF42C /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				422327BE18D06D9200DAF42C /* KKAppDelegate.h */,
-				422327BF18D06D9200DAF42C /* KKAppDelegate.m */,
 				422327C118D06D9200DAF42C /* Main_iPhone.storyboard */,
 				422327C418D06D9200DAF42C /* Main_iPad.storyboard */,
+				422327BE18D06D9200DAF42C /* KKAppDelegate.h */,
+				422327BF18D06D9200DAF42C /* KKAppDelegate.m */,
 				422327C718D06D9200DAF42C /* KKCinemaViewController.h */,
 				422327C818D06D9200DAF42C /* KKCinemaViewController.m */,
 				422327E718D0705F00DAF42C /* KKCinemaView.h */,
 				422327E818D0705F00DAF42C /* KKCinemaView.m */,
-				422327EA18D07E4F00DAF42C /* KKCinemaViewDataSource.h */,
-				422327EB18D07E4F00DAF42C /* KKCinemaViewDataSource.m */,
-				422327CA18D06D9200DAF42C /* Images.xcassets */,
 				422327B618D06D9200DAF42C /* Supporting Files */,
 			);
 			path = Classes;
@@ -108,6 +102,7 @@
 		422327B618D06D9200DAF42C /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				422327CA18D06D9200DAF42C /* Images.xcassets */,
 				422327F118D0891C00DAF42C /* KKCinemaView-Info.plist */,
 				422327F218D0891C00DAF42C /* KKCinemaView-Prefix.pch */,
 				422327B818D06D9200DAF42C /* InfoPlist.strings */,
@@ -145,6 +140,11 @@
 				CLASSPREFIX = KK;
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = KinemaKity;
+				TargetAttributes = {
+					422327AB18D06D9200DAF42C = {
+						DevelopmentTeam = VQHLE7RNUG;
+					};
+				};
 			};
 			buildConfigurationList = 422327A718D06D9200DAF42C /* Build configuration list for PBXProject "KKCinemaView" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -186,7 +186,6 @@
 				422327F018D0882F00DAF42C /* main.m in Sources */,
 				422327C918D06D9200DAF42C /* KKCinemaViewController.m in Sources */,
 				422327C018D06D9200DAF42C /* KKAppDelegate.m in Sources */,
-				422327EC18D07E4F00DAF42C /* KKCinemaViewDataSource.m in Sources */,
 				422327E918D0705F00DAF42C /* KKCinemaView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -300,6 +299,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Classes/KKCinemaView-Prefix.pch";
 				INFOPLIST_FILE = "Classes/KKCinemaView-Info.plist";
@@ -313,6 +313,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Classes/KKCinemaView-Prefix.pch";
 				INFOPLIST_FILE = "Classes/KKCinemaView-Info.plist";
