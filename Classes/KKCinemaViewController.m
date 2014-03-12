@@ -28,9 +28,14 @@
     return 10;
 }
 
-- (NSUInteger)cinemaView:(KKCinemaView*)cinemaView numberOfSeatsInRow:(NSUInteger)row
+- (NSUInteger)numberOfColsInCinemaView:(KKCinemaView *)cinemaView
 {
     return 14;
+}
+
+- (CGFloat)cinemaView:(KKCinemaView*)cinemaView interRowSpacingForRow:(NSUInteger)row
+{
+    return 2;
 }
 
 @end
