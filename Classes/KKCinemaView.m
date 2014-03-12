@@ -36,16 +36,11 @@
     
     if ([recongizer state] == UIGestureRecognizerStateBegan) {
         NSLog(@"Began");
-        NSLog(@"%@", _rowOriginsY);
         
         //find row
-        CGRect drawingRect = UIEdgeInsetsInsetRect(self.frame, _edgeInsets);
-        CGFloat distanceY = panPoint.y - drawingRect.origin.y;
-        
         __block NSUInteger rowIndex = NSUIntegerMax;
         [_rowOriginsY enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSNumber* distanceNumber, NSUInteger idx, BOOL *stop) {
-            
-            if ([distanceNumber floatValue] <= distanceY) {
+            if ([distanceNumber floatValue] <= panPoint.y) {
                 rowIndex = idx;
                 *stop = YES;
             }
