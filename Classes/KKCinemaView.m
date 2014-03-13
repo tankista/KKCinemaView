@@ -7,6 +7,7 @@
 //
 
 #import "KKCinemaView.h"
+#import <objC/runtime.h>
 
 const KKSeatLocation KKSeatLocationInvalid = {NSNotFound, NSNotFound};
 
@@ -33,8 +34,14 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 #define DEFAULT_COL_SPACING 1
 #define DEFAULT_ROW_SPACING 1
 
+@interface KKCinemaView () <UIScrollViewDelegate>
+
+@end
+
 @implementation KKCinemaView
 {
+    UIView*                 _contentView;
+    
     UIEdgeInsets            _edgeInsets;    //this insets drawing rect from view's edges
     CGRect                  _drawingRect;   //Frame, where seat layout is drawn (rect minus _edgeInsets)
     
@@ -51,8 +58,14 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     NSUInteger              _panGestureColIndex;
     
     CGSize                  _seatSize;
+    CGSize                  _cinemaSize;            //calculated after reloadData
     
     KKSeatLocation          _lastDelegatedLocation; //last location that was sent to a delegate
+}
+
+- (void)dealloc
+{
+    //TODO: remove KVO for zooming
 }
 
 - (void)awakeFromNib
@@ -61,9 +74,9 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
     _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
 
-    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
-    _panGestureRecognizer.maximumNumberOfTouches = 1;
-    [self addGestureRecognizer:_panGestureRecognizer];
+//    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
+//    _panGestureRecognizer.maximumNumberOfTouches = 1;
+//    [self addGestureRecognizer:_panGestureRecognizer];
     
     _panGestureColIndex = NSNotFound;
     _panGestureRowIndex = NSNotFound;
@@ -73,32 +86,40 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     [self addGestureRecognizer:_tapGestureRecognizer];
     
     _lastDelegatedLocation = KKSeatLocationInvalid;
+    
+    self.minimumZoomScale = 1.0;
+    self.maximumZoomScale = 2.0;
+    
+    //add KVO for zooming
+    //[self addObserver:self forKeyPath:@"zoomScale" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
+    _contentView = [[UIView alloc] initWithFrame:self.bounds];
+    _contentView.backgroundColor = [UIColor redColor];
+    [self addSubview:_contentView];
+    
+    self.delegate = self;
 }
 
 - (void)reloadData
 {
     _lastDelegatedLocation = KKSeatLocationInvalid;
-    
-    [self setNeedsDisplay];
+    [self reloadSeats];
 }
 
-- (void)drawRect:(CGRect)rect
+- (void)reloadSeats
 {
-    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGRect rect = self.bounds;
     
     _drawingRect = UIEdgeInsetsInsetRect(rect, _edgeInsets);
-    
-    CGContextClipToRect(context, _drawingRect);
-    
-    _numberOfRows = [_dataSource numberOfRowsInCinemaView:self];
+
+    _numberOfRows = [self.dataSource numberOfRowsInCinemaView:self];
     NSAssert(_numberOfRows > 0, @"You must specify number of rows");
     
-    _numberOfCols = [_dataSource numberOfColsInCinemaView:self];
+    _numberOfCols = [self.dataSource numberOfColsInCinemaView:self];
     NSAssert(_numberOfCols > 0, @"You must specify number of rows");
     
     _colSpacing = DEFAULT_COL_SPACING;
-    if ([_dataSource respondsToSelector:@selector(interColSpacingInCinemaView:)]) {
-        _colSpacing = [_dataSource interColSpacingInCinemaView:self];
+    if ([self.dataSource respondsToSelector:@selector(interColSpacingInCinemaView:)]) {
+        _colSpacing = [self.dataSource interColSpacingInCinemaView:self];
     }
     
     //calcuclate seat size
@@ -118,8 +139,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         CGFloat rowOriginY = previousRowOriginY;
         CGFloat rowSpacing = DEFAULT_ROW_SPACING;
         if (row > 0 && row < _numberOfRows) {
-            if ([_dataSource respondsToSelector:@selector(cinemaView:interRowSpacingForRow:)]) {
-                rowSpacing = [_dataSource cinemaView:self interRowSpacingForRow:row];
+            if ([self.dataSource respondsToSelector:@selector(cinemaView:interRowSpacingForRow:)]) {
+                rowSpacing = [self.dataSource cinemaView:self interRowSpacingForRow:row];
             }
             rowOriginY += rowSpacing;
         }
@@ -146,11 +167,31 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             location.row = row;
             location.col = col;
             
-            KKSeatType seatType = [_dataSource cinemaView:self seatTypeForLocation:location];
+            KKSeatType seatType = [self.dataSource cinemaView:self seatTypeForLocation:location];
             
-            drawSeat(context, seatRect, location, seatType);
+            UIView *seatView = [[UIView alloc] initWithFrame:seatRect];
+            seatView.backgroundColor = colorRefForSeatType(seatType);
+            
+            [_contentView addSubview:seatView];
         }
     }
+
+    CGFloat lastRowOriginX = [[_rowOriginsY lastObject] floatValue];
+    _cinemaSize = CGSizeMake(self.frame.size.width, _edgeInsets.top + _edgeInsets.bottom + lastRowOriginX + _seatSize.height);
+    
+    [self sizeToFit];
+}
+
+- (CGSize)sizeThatFits:(CGSize)size
+{
+    return _cinemaSize;
+}
+
+- (void)sizeToFit
+{
+    CGRect contentRect = _contentView.frame;
+    contentRect.size = _cinemaSize;
+    _contentView.frame = contentRect;
 }
 
 #pragma mark
@@ -207,16 +248,60 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         return;
     
     BOOL shouldSelect = YES;
-    if ([_delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
-        shouldSelect = [_delegate cinemaView:self shouldSelectSeatAtLocation:location];
+    if ([self.delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
+        shouldSelect = [self.delegate cinemaView:self shouldSelectSeatAtLocation:location];
     }
     
-    if ([_delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
-        [_delegate cinemaView:self didSelectSeatAtLocation:location];
+    if ([self.delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
+        [self.delegate cinemaView:self didSelectSeatAtLocation:location];
     }
+    
+    NSLog(@"selected: %@", NSStringFromKKSeatLocation(location));
+    
+    [self zoomToRect:[self zoomAtPoint:CGPointMake(100, 100) scale:2.0] animated:YES];
     
     _lastDelegatedLocation = location;
 }
+
+UIColor* colorRefForSeatType(KKSeatType type)
+{
+    if (type == KKSeatTypeNone) {
+        static dispatch_once_t onceToken;
+        static UIColor* color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor whiteColor];
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeFree) {
+        static dispatch_once_t onceToken;
+        static UIColor* color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor blueColor];
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeReserved) {
+        static dispatch_once_t onceToken;
+        static UIColor* color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor redColor];
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeSelected) {
+        static dispatch_once_t onceToken;
+        static UIColor* color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor greenColor];
+        });
+        return color;
+    }
+    return NULL;
+}
+
+#pragma mark
+#pragma mark Location Methods
 
 - (NSUInteger)rowIndexAtPoint:(CGPoint)point
 {
@@ -256,51 +341,25 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     return KKSeatLocationInvalid;
 }
 
-void drawSeat(CGContextRef context, CGRect rect, KKSeatLocation location, KKSeatType type)
+#pragma mark
+#pragma mark Zooming Methods
+
+- (CGRect)zoomAtPoint:(CGPoint)center scale:(float)scale
 {
-    CGContextSaveGState(context);
-    CGContextSetFillColorWithColor(context, colorRefForSeatType(type));
-    CGContextFillRect(context, rect);
-    CGContextRestoreGState(context);
+    CGRect zoomRect;
+    
+    zoomRect.size.height = self.frame.size.height / scale;
+    zoomRect.size.width  = self.frame.size.width  / scale;
+    
+    zoomRect.origin.x = center.x - (zoomRect.size.width  / 2.0);
+    zoomRect.origin.y = center.y - (zoomRect.size.height / 2.0);
+    
+    return zoomRect;
 }
 
-CGColorRef colorRefForSeatType(KKSeatType type)
+- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
 {
-    if (type == KKSeatTypeNone) {
-        static dispatch_once_t onceToken;
-        static CGColorRef color;
-        dispatch_once(&onceToken, ^{
-            color = [UIColor whiteColor].CGColor;
-        });
-        return color;
-    }
-    else if (type == KKSeatTypeFree) {
-        static dispatch_once_t onceToken;
-        static CGColorRef color;
-        dispatch_once(&onceToken, ^{
-            color = [UIColor blueColor].CGColor;
-        });
-        return color;
-    }
-    else if (type == KKSeatTypeReserved) {
-        static dispatch_once_t onceToken;
-        static CGColorRef color;
-        dispatch_once(&onceToken, ^{
-            color = [UIColor redColor].CGColor;
-        });
-        return color;
-    }
-    else if (type == KKSeatTypeSelected) {
-        static dispatch_once_t onceToken;
-        static CGColorRef color;
-        dispatch_once(&onceToken, ^{
-            color = [UIColor greenColor].CGColor;
-        });
-        return color;
-    }
-    return NULL;
+    return _contentView;
 }
-
-
 
 @end

@@ -48,7 +48,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 
 @end
 
-@protocol KKCinemaViewDelegate <NSObject>
+@protocol KKCinemaViewDelegate <UIScrollViewDelegate>
 
 @optional
 
@@ -66,7 +66,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 
 @end
 
-@interface KKCinemaView : UIView
+@interface KKCinemaView : UIScrollView
 
 @property (nonatomic, weak) IBOutlet id<KKCinemaViewDataSource> dataSource;
 @property (nonatomic, weak) id<KKCinemaViewDelegate> delegate;
