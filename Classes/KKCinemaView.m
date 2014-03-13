@@ -72,6 +72,12 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 {
     [super awakeFromNib];
 
+    self.clipsToBounds = YES;
+    self.bouncesZoom = YES;
+    self.showsHorizontalScrollIndicator = NO;
+    self.showsVerticalScrollIndicator = NO;
+    self.directionalLockEnabled = YES;
+    
     _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
 
 //    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
@@ -93,10 +99,17 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     //add KVO for zooming
     //[self addObserver:self forKeyPath:@"zoomScale" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     _contentView = [[UIView alloc] initWithFrame:self.bounds];
-    _contentView.backgroundColor = [UIColor redColor];
+    _contentView.backgroundColor = self.backgroundColor;
+    _contentView.clipsToBounds = YES;
     [self addSubview:_contentView];
     
     self.delegate = self;
+}
+
+- (void)setBackgroundColor:(UIColor *)backgroundColor
+{
+    [super setBackgroundColor:backgroundColor];
+    [_contentView setBackgroundColor:backgroundColor];
 }
 
 - (void)reloadData

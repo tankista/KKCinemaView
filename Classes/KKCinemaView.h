@@ -13,6 +13,8 @@
 typedef enum {
     KKSeatTypeNone,
     KKSeatTypeFree,
+//    KKSeatTypeWheelChair, TODO: to be implemented
+//    KKSeatTypeLoveSeats,  TODO: to be implemented
     KKSeatTypeReserved,
     KKSeatTypeSelected
 } KKSeatType;
