@@ -84,3 +84,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 //- defautl edge insests as property
 
 @end
+
+@interface NSValue (KKSeatLocation)
+
++ (instancetype)valueWithKKSeatLocation:(KKSeatLocation)location;
+- (KKSeatLocation)seatLocationValue;
+
+@end

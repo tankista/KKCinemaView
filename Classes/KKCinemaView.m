@@ -18,6 +18,8 @@ bool KKSeatLocationIsInvalid(KKSeatLocation location)
 
 bool KKSeatLocationEqualsToLocation(KKSeatLocation location, KKSeatLocation otherLocation)
 {
+    if (KKSeatLocationIsInvalid(location) || KKSeatLocationIsInvalid(otherLocation))
+        return NO;
     return location.row == otherLocation.row && location.col == otherLocation.col;
 }
 
@@ -180,7 +182,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             KKSeatType seatType = [self.dataSource cinemaView:self seatTypeForLocation:location];
             
             UIView *seatView = [[UIView alloc] initWithFrame:seatRect];
-            seatView.backgroundColor = colorRefForSeatType(seatType);
+            seatView.backgroundColor = [self colorForSeatType:seatType];
             
             [_contentView addSubview:seatView];
         }
@@ -280,7 +282,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _lastDelegatedLocation = location;
 }
 
-UIColor* colorRefForSeatType(KKSeatType type)
+- (UIColor*)colorForSeatType:(KKSeatType)type
 {
     if (type == KKSeatTypeNone) {
         static dispatch_once_t onceToken;
@@ -314,7 +316,7 @@ UIColor* colorRefForSeatType(KKSeatType type)
         });
         return color;
     }
-    return NULL;
+    return nil;
 }
 
 #pragma mark
@@ -388,6 +390,22 @@ UIColor* colorRefForSeatType(KKSeatType type)
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
 {
     return _contentView;
+}
+
+@end
+
+@implementation NSValue (KKSeatLocation)
+
++ (instancetype)valueWithKKSeatLocation:(KKSeatLocation)location
+{
+    return [NSValue value:&location withObjCType:@encode(KKSeatLocation)];
+}
+
+- (KKSeatLocation)seatLocationValue
+{
+    KKSeatLocation location;
+    [self getValue:&location];
+    return location;
 }
 
 @end
