@@ -34,6 +34,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 #define DEFAULT_COL_SPACING 1
 #define DEFAULT_ROW_SPACING 1
 
+#define MINIMUM_ZOOM_SCALE 1.0
+#define MAXIMUM_ZOOM_SCALE 2.5
+#define ZOOM_SCALE MAXIMUM_ZOOM_SCALE
+
 @interface KKCinemaView () <UIScrollViewDelegate>
 
 @end
@@ -63,11 +67,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     KKSeatLocation          _lastDelegatedLocation; //last location that was sent to a delegate
 }
 
-- (void)dealloc
-{
-    //TODO: remove KVO for zooming
-}
-
 - (void)awakeFromNib
 {
     [super awakeFromNib];
@@ -93,11 +92,9 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     _lastDelegatedLocation = KKSeatLocationInvalid;
     
-    self.minimumZoomScale = 1.0;
-    self.maximumZoomScale = 2.0;
+    self.minimumZoomScale = MINIMUM_ZOOM_SCALE;
+    self.maximumZoomScale = MAXIMUM_ZOOM_SCALE;
     
-    //add KVO for zooming
-    //[self addObserver:self forKeyPath:@"zoomScale" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     _contentView = [[UIView alloc] initWithFrame:self.bounds];
     _contentView.backgroundColor = self.backgroundColor;
     _contentView.clipsToBounds = YES;
@@ -237,6 +234,14 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
         KKSeatLocation location = [self locationAtPoint:tapPoint];
         [self didSelectSeatAtLocation:location];
+        
+        //zoom to tap location
+        if ([self isZoomed] == NO) {
+            [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
+        }
+        else {
+            [self zoomToRect:self.bounds animated:YES];
+        }
     }
 }
 
@@ -270,8 +275,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     }
     
     NSLog(@"selected: %@", NSStringFromKKSeatLocation(location));
-    
-    [self zoomToRect:[self zoomAtPoint:CGPointMake(100, 100) scale:2.0] animated:YES];
     
     _lastDelegatedLocation = location;
 }
@@ -357,15 +360,26 @@ UIColor* colorRefForSeatType(KKSeatType type)
 #pragma mark
 #pragma mark Zooming Methods
 
-- (CGRect)zoomAtPoint:(CGPoint)center scale:(float)scale
+- (BOOL)isZoomed
+{
+    return self.zoomScale > self.minimumZoomScale;
+}
+
+- (void)zoomAtPoint:(CGPoint)point scale:(float)scale animated:(BOOL)animated
+{
+    CGRect zoomRect = [self zoomRectAtPoint:point scale:scale];
+    [self zoomToRect:zoomRect animated:animated];
+}
+
+- (CGRect)zoomRectAtPoint:(CGPoint)point scale:(float)scale
 {
     CGRect zoomRect;
     
     zoomRect.size.height = self.frame.size.height / scale;
     zoomRect.size.width  = self.frame.size.width  / scale;
     
-    zoomRect.origin.x = center.x - (zoomRect.size.width  / 2.0);
-    zoomRect.origin.y = center.y - (zoomRect.size.height / 2.0);
+    zoomRect.origin.x = point.x - (zoomRect.size.width  / 2.0);
+    zoomRect.origin.y = point.y - (zoomRect.size.height / 2.0);
     
     return zoomRect;
 }
