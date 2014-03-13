@@ -198,9 +198,24 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         - do same but for unselection
      */
     
-    if (KKSeatLocationIsInvalid(location)) {
+    //if is invalid
+    if (KKSeatLocationIsInvalid(location))
         return;
+    
+    //if already delegated
+    if (KKSeatLocationEqualsToLocation(location, _lastDelegatedLocation))
+        return;
+    
+    BOOL shouldSelect = YES;
+    if ([_delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
+        shouldSelect = [_delegate cinemaView:self shouldSelectSeatAtLocation:location];
     }
+    
+    if ([_delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
+        [_delegate cinemaView:self didSelectSeatAtLocation:location];
+    }
+    
+    _lastDelegatedLocation = location;
 }
 
 - (NSUInteger)rowIndexAtPoint:(CGPoint)point

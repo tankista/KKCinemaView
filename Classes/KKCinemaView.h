@@ -61,7 +61,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 - (BOOL)cinemaView:(KKCinemaView*)view shouldSelectSeatAtLocation:(KKSeatLocation)location;
 
 //TODO: to be implemented
-//- (void)cinemaView:(KKCinemaView*)view didSelectSeatAtLocation:(KKSeatLocation)location;
+- (void)cinemaView:(KKCinemaView*)view didSelectSeatAtLocation:(KKSeatLocation)location;
 //- (void)cinemaView:(KKCinemaView*)view didDeSelectSeatAtLocation:(KKSeatLocation)location;
 
 @end
@@ -69,6 +69,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 @interface KKCinemaView : UIView
 
 @property (nonatomic, weak) IBOutlet id<KKCinemaViewDataSource> dataSource;
+@property (nonatomic, weak) id<KKCinemaViewDelegate> delegate;
 
 /**
  * Forces KKCinemaView to reload it's data using dataSource and redraw whole seat layout
