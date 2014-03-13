@@ -35,7 +35,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 #define DEFAULT_ROW_SPACING 1
 
 #define MINIMUM_ZOOM_SCALE 1.0
-#define MAXIMUM_ZOOM_SCALE 2.5
+#define MAXIMUM_ZOOM_SCALE 3.0
 #define ZOOM_SCALE MAXIMUM_ZOOM_SCALE
 
 @interface KKCinemaView () <UIScrollViewDelegate>
@@ -233,6 +233,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
         KKSeatLocation location = [self locationAtPoint:tapPoint];
+        
         [self didSelectSeatAtLocation:location];
         
         //zoom to tap location
@@ -240,7 +241,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
         }
         else {
-            [self zoomToRect:self.bounds animated:YES];
+            //[self zoomToRect:self.bounds animated:YES];
         }
     }
 }
@@ -262,8 +263,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         return;
     
     //if already delegated
-    if (KKSeatLocationEqualsToLocation(location, _lastDelegatedLocation))
-        return;
+//    if (KKSeatLocationEqualsToLocation(location, _lastDelegatedLocation))
+//        return;
     
     BOOL shouldSelect = YES;
     if ([self.delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
@@ -323,7 +324,7 @@ UIColor* colorRefForSeatType(KKSeatType type)
 {
     __block NSUInteger rowIndex = NSNotFound;
     [_rowOriginsY enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSNumber* distanceNumber, NSUInteger idx, BOOL *stop) {
-        if ([distanceNumber floatValue] <= point.y) {
+        if ([distanceNumber floatValue] * self.zoomScale <= point.y) {
             rowIndex = idx;
             *stop = YES;
         }
@@ -335,9 +336,9 @@ UIColor* colorRefForSeatType(KKSeatType type)
 {
     NSUInteger colIndex = NSNotFound;
     for (int col = 0; col < _numberOfCols; col++) {
-        CGFloat cumColSpacing = (col > 0 && col < _numberOfCols-1) ? (col-1) * _colSpacing : 0;
-        CGFloat colOriginX = _edgeInsets.left + col * _seatSize.width + cumColSpacing;
-        if (colOriginX > point.x) {
+        CGFloat cumColSpacing = (col > 0 && col < _numberOfCols) ? col * _colSpacing * self.zoomScale : 0;
+        CGFloat colOriginX = _edgeInsets.left * self.zoomScale + col * _seatSize.width * self.zoomScale + cumColSpacing;
+        if (colOriginX + _seatSize.width * self.zoomScale > point.x) {
             colIndex = col;
             break;
         }

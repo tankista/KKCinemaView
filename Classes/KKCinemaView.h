@@ -26,7 +26,7 @@ typedef struct {
 
 extern const KKSeatLocation KKSeatLocationInvalid;
 bool KKSeatLocationIsInvalid(KKSeatLocation location);
-bool KSeatLocationEqualsToLocation(KKSeatLocation location, KKSeatLocation otherLocation);
+bool KKSeatLocationEqualsToLocation(KKSeatLocation location, KKSeatLocation otherLocation);
 NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 
 @protocol KKCinemaViewDataSource <NSObject>
