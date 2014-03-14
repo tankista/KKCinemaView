@@ -61,10 +61,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
  * cinemaView:didSelectSeatAtLocation: will be called.
  */
 - (BOOL)cinemaView:(KKCinemaView*)view shouldSelectSeatAtLocation:(KKSeatLocation)location;
+- (BOOL)cinemaView:(KKCinemaView*)view shouldDeselectSeatAtLocation:(KKSeatLocation)location;
 
-//TODO: to be implemented
 - (void)cinemaView:(KKCinemaView*)view didSelectSeatAtLocation:(KKSeatLocation)location;
-//- (void)cinemaView:(KKCinemaView*)view didDeSelectSeatAtLocation:(KKSeatLocation)location;
+- (void)cinemaView:(KKCinemaView*)view didDeselectSeatAtLocation:(KKSeatLocation)location;
 
 @end
 

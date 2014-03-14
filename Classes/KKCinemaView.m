@@ -33,6 +33,15 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     }
 }
 
+@interface NSMutableArray (KKSeatLocation)
+
+- (void)addLocation:(KKSeatLocation)location;
+- (void)removeLocation:(KKSeatLocation)location;
+- (BOOL)containsLocation:(KKSeatLocation)location;
+- (BOOL)containsLocation:(KKSeatLocation)location index:(NSUInteger *)index;
+
+@end
+
 #define DEFAULT_COL_SPACING 1
 #define DEFAULT_ROW_SPACING 1
 
@@ -68,8 +77,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     CGSize                  _seatSize;
     CGSize                  _cinemaSize;            //calculated after reloadData
-    
-    KKSeatLocation          _lastDelegatedLocation; //last location that was sent to a delegate
 }
 
 - (void)awakeFromNib
@@ -95,8 +102,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _tapGestureRecognizer.numberOfTapsRequired = 1;
     [self addGestureRecognizer:_tapGestureRecognizer];
     
-    _lastDelegatedLocation = KKSeatLocationInvalid;
-    
     self.minimumZoomScale = MINIMUM_ZOOM_SCALE;
     self.maximumZoomScale = MAXIMUM_ZOOM_SCALE;
     
@@ -116,7 +121,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 - (void)reloadData
 {
-    _lastDelegatedLocation = KKSeatLocationInvalid;
     [self reloadSeats];
 }
 
@@ -231,7 +235,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateChanged) {
         _panGestureColIndex = [self colIndexAtPoint:panPoint];
         KKSeatLocation location = {_panGestureRowIndex, _panGestureColIndex};
-        [self didSelectSeatAtLocation:location];
+        [self didSelectSeatAtLocation:location tapPoint:panPoint];
     }
     
     if ([recognizer state] == UIGestureRecognizerStateRecognized || [recognizer state] == UIGestureRecognizerStateCancelled) {
@@ -247,18 +251,17 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
         KKSeatLocation location = [self locationAtPoint:tapPoint];
         
-        //zoom to tap location
         if ([self isZoomed] == NO) {
             [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
         }
         else {
-            [self didSelectSeatAtLocation:location];
+            [self didSelectSeatAtLocation:location tapPoint:tapPoint];
             //[self zoomToRect:self.bounds animated:YES];
         }
     }
 }
 
-- (void)didSelectSeatAtLocation:(KKSeatLocation)location
+- (void)didSelectSeatAtLocation:(KKSeatLocation)location tapPoint:(CGPoint)point
 {
     /**
         TODO:
@@ -274,22 +277,48 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if (KKSeatLocationIsInvalid(location))
         return;
     
-    //if already delegated
-//    if (KKSeatLocationEqualsToLocation(location, _lastDelegatedLocation))
-//        return;
-    
+    if ([self.selectedSeatLocations containsLocation:location]) {
+        [self deselectSeatAtLocation:location];
+    }
+    else {
+        [self selectSeatAtLocation:location tapPoint:point];
+    }
+}
+
+- (void)selectSeatAtLocation:(KKSeatLocation)location tapPoint:(CGPoint)point
+{
     BOOL shouldSelect = YES;
     if ([self.delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
         shouldSelect = [self.delegate cinemaView:self shouldSelectSeatAtLocation:location];
     }
     
-    if ([self.delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
-        [self.delegate cinemaView:self didSelectSeatAtLocation:location];
+    if (shouldSelect) {
+        [self.selectedSeatLocations addLocation:location];
+
+        //TODO: visually select seat
+
+        if ([self.delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
+            [self.delegate cinemaView:self didSelectSeatAtLocation:location];
+        }
+    }
+}
+
+- (void)deselectSeatAtLocation:(KKSeatLocation)location
+{
+    BOOL shouldDeselect = YES;
+    if ([self.delegate respondsToSelector:@selector(cinemaView:shouldDeselectSeatAtLocation:)]) {
+        shouldDeselect = [self.delegate cinemaView:self shouldDeselectSeatAtLocation:location];
     }
     
-    NSLog(@"selected: %@", NSStringFromKKSeatLocation(location));
-    
-    _lastDelegatedLocation = location;
+    if (shouldDeselect) {
+        [self.selectedSeatLocations removeLocation:location];
+
+        //TODO: visually deselect seat
+        
+        if ([self.delegate respondsToSelector:@selector(cinemaView:didDeselectSeatAtLocation:)]) {
+            [self.delegate cinemaView:self didDeselectSeatAtLocation:location];
+        }
+    }
 }
 
 - (UIColor*)colorForSeatType:(KKSeatType)type
@@ -420,20 +449,12 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 @end
 
-@interface NSMutableArray (KKSeatLocation)
-
-- (void)addLocation:(KKSeatLocation)location;
-- (void)removeLocation:(KKSeatLocation)location;
-- (BOOL)containsLocation:(KKSeatLocation)location index:(NSUInteger *)index;
-
-@end
-
 @implementation NSMutableArray (KKSeatLocation)
 
 - (void)addLocation:(KKSeatLocation)location
 {
     NSAssert(KKSeatLocationIsInvalid(location) == NO, @"Seat location is invalid");
-    if ([self containsLocation:location index:NULL] == NO) {
+    if ([self containsLocation:location] == NO) {
         NSValue *value = [NSValue valueWithKKSeatLocation:location];
         [self addObject:value];
     }
@@ -458,11 +479,19 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     [self enumerateObjectsUsingBlock:^(NSValue* value, NSUInteger idx, BOOL *stop) {
         if (KKSeatLocationEqualsToLocation([value seatLocationValue], location)) {
             contains = YES;
-            *index = idx;
+            if (index != NULL) {
+                *index = idx;
+            }
             *stop = YES;
         }
     }];
+    
     return contains;
+}
+
+- (BOOL)containsLocation:(KKSeatLocation)location
+{
+    return [self containsLocation:location index:NULL];
 }
 
 @end
