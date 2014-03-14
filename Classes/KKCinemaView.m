@@ -67,6 +67,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     CGSize                  _cinemaSize;            //calculated after reloadData
     
     KKSeatLocation          _lastDelegatedLocation; //last location that was sent to a delegate
+    
+//    NSMutableArray*         _selectedSeatLocations; //array of selected locations (wrapped in NSValue)
 }
 
 - (void)awakeFromNib
