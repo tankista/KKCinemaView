@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		42092EFA18D3720700172EA9 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327D118D06D9200DAF42C /* XCTest.framework */; };
+		42092EFB18D3720700172EA9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327AF18D06D9200DAF42C /* Foundation.framework */; };
+		42092EFC18D3720700172EA9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327B318D06D9200DAF42C /* UIKit.framework */; };
+		42092F0218D3720700172EA9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 42092F0018D3720700172EA9 /* InfoPlist.strings */; };
+		42092F0418D3720700172EA9 /* KKCinemaViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 42092F0318D3720700172EA9 /* KKCinemaViewTests.m */; };
+		42092F0B18D3723A00172EA9 /* KKCinemaView.m in Sources */ = {isa = PBXBuildFile; fileRef = 422327E818D0705F00DAF42C /* KKCinemaView.m */; };
 		422327B018D06D9200DAF42C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327AF18D06D9200DAF42C /* Foundation.framework */; };
 		422327B218D06D9200DAF42C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327B118D06D9200DAF42C /* CoreGraphics.framework */; };
 		422327B418D06D9200DAF42C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 422327B318D06D9200DAF42C /* UIKit.framework */; };
@@ -20,7 +26,22 @@
 		422327F518D089E100DAF42C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 422327C418D06D9200DAF42C /* Main_iPad.storyboard */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		42092F0618D3720700172EA9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 422327A418D06D9200DAF42C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 422327AB18D06D9200DAF42C;
+			remoteInfo = KKCinemaView;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		42092EF918D3720700172EA9 /* KKCinemaViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KKCinemaViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		42092EFF18D3720700172EA9 /* KKCinemaViewTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "KKCinemaViewTests-Info.plist"; sourceTree = "<group>"; };
+		42092F0118D3720700172EA9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		42092F0318D3720700172EA9 /* KKCinemaViewTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KKCinemaViewTests.m; sourceTree = "<group>"; };
+		42092F0518D3720700172EA9 /* KKCinemaViewTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "KKCinemaViewTests-Prefix.pch"; sourceTree = "<group>"; };
 		422327AC18D06D9200DAF42C /* KKCinemaView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KKCinemaView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		422327AF18D06D9200DAF42C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		422327B118D06D9200DAF42C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -42,6 +63,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		42092EF618D3720700172EA9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42092EFA18D3720700172EA9 /* XCTest.framework in Frameworks */,
+				42092EFC18D3720700172EA9 /* UIKit.framework in Frameworks */,
+				42092EFB18D3720700172EA9 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		422327A918D06D9200DAF42C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -55,10 +86,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		42092EFD18D3720700172EA9 /* KKCinemaViewTests */ = {
+			isa = PBXGroup;
+			children = (
+				42092F0318D3720700172EA9 /* KKCinemaViewTests.m */,
+				42092EFE18D3720700172EA9 /* Supporting Files */,
+			);
+			path = KKCinemaViewTests;
+			sourceTree = "<group>";
+		};
+		42092EFE18D3720700172EA9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				42092EFF18D3720700172EA9 /* KKCinemaViewTests-Info.plist */,
+				42092F0018D3720700172EA9 /* InfoPlist.strings */,
+				42092F0518D3720700172EA9 /* KKCinemaViewTests-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		422327A318D06D9200DAF42C = {
 			isa = PBXGroup;
 			children = (
 				422327B518D06D9200DAF42C /* Classes */,
+				42092EFD18D3720700172EA9 /* KKCinemaViewTests */,
 				422327AE18D06D9200DAF42C /* Frameworks */,
 				422327AD18D06D9200DAF42C /* Products */,
 			);
@@ -68,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				422327AC18D06D9200DAF42C /* KKCinemaView.app */,
+				42092EF918D3720700172EA9 /* KKCinemaViewTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,6 +166,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		42092EF818D3720700172EA9 /* KKCinemaViewTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 42092F0818D3720700172EA9 /* Build configuration list for PBXNativeTarget "KKCinemaViewTests" */;
+			buildPhases = (
+				42092EF518D3720700172EA9 /* Sources */,
+				42092EF618D3720700172EA9 /* Frameworks */,
+				42092EF718D3720700172EA9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				42092F0718D3720700172EA9 /* PBXTargetDependency */,
+			);
+			name = KKCinemaViewTests;
+			productName = KKCinemaViewTests;
+			productReference = 42092EF918D3720700172EA9 /* KKCinemaViewTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		422327AB18D06D9200DAF42C /* KKCinemaView */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 422327E118D06D9200DAF42C /* Build configuration list for PBXNativeTarget "KKCinemaView" */;
@@ -138,9 +208,12 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = KK;
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = KinemaKity;
 				TargetAttributes = {
+					42092EF818D3720700172EA9 = {
+						TestTargetID = 422327AB18D06D9200DAF42C;
+					};
 					422327AB18D06D9200DAF42C = {
 						DevelopmentTeam = VQHLE7RNUG;
 					};
@@ -160,11 +233,20 @@
 			projectRoot = "";
 			targets = (
 				422327AB18D06D9200DAF42C /* KKCinemaView */,
+				42092EF818D3720700172EA9 /* KKCinemaViewTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		42092EF718D3720700172EA9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42092F0218D3720700172EA9 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		422327AA18D06D9200DAF42C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -179,6 +261,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		42092EF518D3720700172EA9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42092F0418D3720700172EA9 /* KKCinemaViewTests.m in Sources */,
+				42092F0B18D3723A00172EA9 /* KKCinemaView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		422327A818D06D9200DAF42C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -192,7 +283,23 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		42092F0718D3720700172EA9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 422327AB18D06D9200DAF42C /* KKCinemaView */;
+			targetProxy = 42092F0618D3720700172EA9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
+		42092F0018D3720700172EA9 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				42092F0118D3720700172EA9 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		422327B818D06D9200DAF42C /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -220,11 +327,54 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		42092F0918D3720700172EA9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/KKCinemaView.app/KKCinemaView";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KKCinemaViewTests/KKCinemaViewTests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "KKCinemaViewTests/KKCinemaViewTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		42092F0A18D3720700172EA9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/KKCinemaView.app/KKCinemaView";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KKCinemaViewTests/KKCinemaViewTests-Prefix.pch";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "KKCinemaViewTests/KKCinemaViewTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
 		422327DF18D06D9200DAF42C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -264,7 +414,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -325,6 +474,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		42092F0818D3720700172EA9 /* Build configuration list for PBXNativeTarget "KKCinemaViewTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				42092F0918D3720700172EA9 /* Debug */,
+				42092F0A18D3720700172EA9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		422327A718D06D9200DAF42C /* Build configuration list for PBXProject "KKCinemaView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
