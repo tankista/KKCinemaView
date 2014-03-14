@@ -42,6 +42,9 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 @interface KKCinemaView () <UIScrollViewDelegate>
 
+//array of selected locations (wrapped in NSValue)
+@property (nonatomic, strong) NSMutableArray* selectedSeatLocations;
+
 @end
 
 @implementation KKCinemaView
@@ -67,8 +70,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     CGSize                  _cinemaSize;            //calculated after reloadData
     
     KKSeatLocation          _lastDelegatedLocation; //last location that was sent to a delegate
-    
-//    NSMutableArray*         _selectedSeatLocations; //array of selected locations (wrapped in NSValue)
 }
 
 - (void)awakeFromNib
@@ -208,6 +209,14 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _contentView.frame = contentRect;
 }
 
+- (NSMutableArray *)selectedSeatLocations
+{
+    if (_selectedSeatLocations == nil) {
+        _selectedSeatLocations = [[NSMutableArray alloc] init];
+    }
+    return _selectedSeatLocations;
+}
+
 #pragma mark
 #pragma mark Private Methods
 
@@ -238,13 +247,12 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
         KKSeatLocation location = [self locationAtPoint:tapPoint];
         
-        [self didSelectSeatAtLocation:location];
-        
         //zoom to tap location
         if ([self isZoomed] == NO) {
             [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
         }
         else {
+            [self didSelectSeatAtLocation:location];
             //[self zoomToRect:self.bounds animated:YES];
         }
     }
@@ -411,3 +419,72 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 }
 
 @end
+
+@interface NSMutableArray (KKSeatLocation)
+
+- (void)addLocation:(KKSeatLocation)location;
+- (void)removeLocation:(KKSeatLocation)location;
+- (BOOL)containsLocation:(KKSeatLocation)location index:(NSUInteger *)index;
+
+@end
+
+@implementation NSMutableArray (KKSeatLocation)
+
+- (void)addLocation:(KKSeatLocation)location
+{
+    NSAssert(KKSeatLocationIsInvalid(location) == NO, @"Seat location is invalid");
+    if ([self containsLocation:location index:NULL] == NO) {
+        NSValue *value = [NSValue valueWithKKSeatLocation:location];
+        [self addObject:value];
+    }
+}
+
+- (void)removeLocation:(KKSeatLocation)location
+{
+    NSAssert(KKSeatLocationIsInvalid(location) == NO, @"Seat location is invalid");
+    
+    NSUInteger index;
+    if ([self containsLocation:location index:&index]) {
+        [self removeObjectAtIndex:index];
+    }
+}
+
+- (BOOL)containsLocation:(KKSeatLocation)location index:(NSUInteger *)index
+{
+    if (KKSeatLocationIsInvalid(location))
+        return NO;
+    
+    __block BOOL contains = NO;
+    [self enumerateObjectsUsingBlock:^(NSValue* value, NSUInteger idx, BOOL *stop) {
+        if (KKSeatLocationEqualsToLocation([value seatLocationValue], location)) {
+            contains = YES;
+            *index = idx;
+            *stop = YES;
+        }
+    }];
+    return contains;
+}
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
