@@ -54,6 +54,9 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 //array of selected locations (wrapped in NSValue)
 @property (nonatomic, strong) NSMutableArray* selectedSeatLocations;
 
+//key location, value seat view
+@property (nonatomic, strong) NSMutableDictionary* seatViews;
+
 @end
 
 @implementation KKCinemaView
@@ -110,7 +113,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _contentView.clipsToBounds = YES;
     [self addSubview:_contentView];
     
-    self.delegate = self;
+    self.delegate = self;   //TODO: create delegate proxy here
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor
@@ -135,6 +138,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     _numberOfCols = [self.dataSource numberOfColsInCinemaView:self];
     NSAssert(_numberOfCols > 0, @"You must specify number of rows");
+    
+    //remove all seats
+    [self.seatViews removeAllObjects];
+    
     
     _colSpacing = DEFAULT_COL_SPACING;
     if ([self.dataSource respondsToSelector:@selector(interColSpacingInCinemaView:)]) {
@@ -192,6 +199,11 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             seatView.backgroundColor = [self colorForSeatType:seatType];
             
             [_contentView addSubview:seatView];
+            
+            //save view to seatView by its location but not KKSeatTypeNone
+            if (seatType != KKSeatTypeNone) {
+                [self.seatViews setObject:seatView forKey:NSStringFromKKSeatLocation(location)];
+            }
         }
     }
 
@@ -221,11 +233,25 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     return _selectedSeatLocations;
 }
 
+- (NSMutableDictionary *)seatViews
+{
+    if (_seatViews == nil) {
+        _seatViews = [[NSMutableDictionary alloc] init];
+    }
+    return _seatViews;
+}
+
 #pragma mark
 #pragma mark Private Methods
 
 - (void)panGestureRecognized:(UIPanGestureRecognizer*)recognizer
 {
+    /**
+     TODO:
+     - check if location is out of drawing bounds (within edge insets and last drawed row of seats)
+     - dispatch selection/deselection of same seat only once at a time (pan gesture is called after each panning)
+     */
+    
     CGPoint panPoint = [recognizer locationInView:self];
     
     if ([recognizer state] == UIGestureRecognizerStateBegan) {
@@ -235,7 +261,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateChanged) {
         _panGestureColIndex = [self colIndexAtPoint:panPoint];
         KKSeatLocation location = {_panGestureRowIndex, _panGestureColIndex};
-        [self didSelectSeatAtLocation:location tapPoint:panPoint];
+        [self didSelectSeatAtLocation:location];
     }
     
     if ([recognizer state] == UIGestureRecognizerStateRecognized || [recognizer state] == UIGestureRecognizerStateCancelled) {
@@ -246,6 +272,11 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 - (void)tapGestureRecognized:(UITapGestureRecognizer*)recognizer
 {
+    /**
+     TODO:
+     - check if location is out of drawing bounds (within edge insets and last drawed row of seats)
+     */
+    
     CGPoint tapPoint = [recognizer locationInView:self];
     
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
@@ -255,38 +286,33 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
         }
         else {
-            [self didSelectSeatAtLocation:location tapPoint:tapPoint];
+            [self didSelectSeatAtLocation:location];
             //[self zoomToRect:self.bounds animated:YES];
         }
     }
 }
 
-- (void)didSelectSeatAtLocation:(KKSeatLocation)location tapPoint:(CGPoint)point
+- (void)didSelectSeatAtLocation:(KKSeatLocation)location
 {
-    /**
-        TODO:
-        - check if location is out of drawing bounds (within edge insets and last drawed row of seats)
-        - dispatch selection/deselection of same seat only once at a time (pan gesture is called after each panning)
-        - ask delegate if should be selected
-        - call drawing code to draw selected seat
-        - call delegate that did select
-        - do same but for unselection
-     */
-    
-    //if is invalid
-    if (KKSeatLocationIsInvalid(location))
-        return;
-    
     if ([self.selectedSeatLocations containsLocation:location]) {
         [self deselectSeatAtLocation:location];
     }
     else {
-        [self selectSeatAtLocation:location tapPoint:point];
+        [self selectSeatAtLocation:location];
     }
 }
 
-- (void)selectSeatAtLocation:(KKSeatLocation)location tapPoint:(CGPoint)point
+- (void)selectSeatAtLocation:(KKSeatLocation)location
 {
+    //if is invalid or type None
+    if (KKSeatLocationIsInvalid(location))
+        return;
+    
+    //if selected seat is of type None
+    UIView *seatView = [self seatAtLocation:location];
+    if (seatView == nil)
+        return;
+    
     BOOL shouldSelect = YES;
     if ([self.delegate respondsToSelector:@selector(cinemaView:shouldSelectSeatAtLocation:)]) {
         shouldSelect = [self.delegate cinemaView:self shouldSelectSeatAtLocation:location];
@@ -295,8 +321,9 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if (shouldSelect) {
         [self.selectedSeatLocations addLocation:location];
 
-        //TODO: visually select seat
-
+        //visually select seat
+        seatView.backgroundColor = [self colorForSeatType:KKSeatTypeSelected];
+        
         if ([self.delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
             [self.delegate cinemaView:self didSelectSeatAtLocation:location];
         }
@@ -305,6 +332,13 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 - (void)deselectSeatAtLocation:(KKSeatLocation)location
 {
+    if (KKSeatLocationIsInvalid(location))
+        return;
+    
+    UIView *seatView = [self seatAtLocation:location];
+    if (seatView == nil)
+        return;
+    
     BOOL shouldDeselect = YES;
     if ([self.delegate respondsToSelector:@selector(cinemaView:shouldDeselectSeatAtLocation:)]) {
         shouldDeselect = [self.delegate cinemaView:self shouldDeselectSeatAtLocation:location];
@@ -313,12 +347,18 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if (shouldDeselect) {
         [self.selectedSeatLocations removeLocation:location];
 
-        //TODO: visually deselect seat
+        //visually deselect seat
+        seatView.backgroundColor = [self colorForSeatType:KKSeatTypeFree];
         
         if ([self.delegate respondsToSelector:@selector(cinemaView:didDeselectSeatAtLocation:)]) {
             [self.delegate cinemaView:self didDeselectSeatAtLocation:location];
         }
     }
+}
+
+- (UIView*)seatAtLocation:(KKSeatLocation)location
+{
+    return [self.seatViews objectForKey:NSStringFromKKSeatLocation(location)];
 }
 
 - (UIColor*)colorForSeatType:(KKSeatType)type
