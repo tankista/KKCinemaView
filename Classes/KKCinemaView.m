@@ -93,7 +93,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     self.directionalLockEnabled = YES;
     
     _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
-
+    
 //    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
 //    _panGestureRecognizer.maximumNumberOfTouches = 1;
 //    [self addGestureRecognizer:_panGestureRecognizer];
@@ -141,7 +141,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     //remove all seats
     [self.seatViews removeAllObjects];
-    
     
     _colSpacing = DEFAULT_COL_SPACING;
     if ([self.dataSource respondsToSelector:@selector(interColSpacingInCinemaView:)]) {
@@ -241,6 +240,11 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     return _seatViews;
 }
 
+- (NSArray *)locationsOfSelectedSeats
+{
+    return _selectedSeatLocations ? [NSArray arrayWithArray:_selectedSeatLocations] : nil;
+}
+
 #pragma mark
 #pragma mark Private Methods
 
@@ -282,12 +286,11 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([recognizer state] == UIGestureRecognizerStateRecognized) {
         KKSeatLocation location = [self locationAtPoint:tapPoint];
         
-        if ([self isZoomed] == NO) {
-            [self zoomAtPoint:tapPoint scale:ZOOM_SCALE animated:YES];
+        if ([self isZoomed] == NO && self.zoomAutomatically) {
+            [self zoomAtLocation:location animated:YES];
         }
         else {
             [self didSelectSeatAtLocation:location];
-            //[self zoomToRect:self.bounds animated:YES];
         }
     }
 }
@@ -327,6 +330,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         if ([self.delegate respondsToSelector:@selector(cinemaView:didSelectSeatAtLocation:)]) {
             [self.delegate cinemaView:self didSelectSeatAtLocation:location];
         }
+        
+        if (self.maximumSeatsToSelect > 0 && self.zoomAutomatically && self.maximumSeatsToSelect == [self.selectedSeatLocations count]) {
+            [self unzoomAnimated:YES];
+        }
     }
 }
 
@@ -348,7 +355,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         [self.selectedSeatLocations removeLocation:location];
 
         //visually deselect seat
-        seatView.backgroundColor = [self colorForSeatType:KKSeatTypeFree];
+        KKSeatType seatType = [self.dataSource cinemaView:self seatTypeForLocation:location];
+        seatView.backgroundColor = [self colorForSeatType:seatType];
         
         if ([self.delegate respondsToSelector:@selector(cinemaView:didDeselectSeatAtLocation:)]) {
             [self.delegate cinemaView:self didDeselectSeatAtLocation:location];
@@ -364,12 +372,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 - (UIColor*)colorForSeatType:(KKSeatType)type
 {
     if (type == KKSeatTypeNone) {
-        static dispatch_once_t onceToken;
-        static UIColor* color;
-        dispatch_once(&onceToken, ^{
-            color = [UIColor whiteColor];
-        });
-        return color;
+        return self.backgroundColor;
     }
     else if (type == KKSeatTypeFree) {
         static dispatch_once_t onceToken;
@@ -392,6 +395,14 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         static UIColor* color;
         dispatch_once(&onceToken, ^{
             color = [UIColor greenColor];
+        });
+        return color;
+    }
+    else if (type == KKSeatTypeWheelChair) {
+        static dispatch_once_t onceToken;
+        static UIColor* color;
+        dispatch_once(&onceToken, ^{
+            color = [UIColor grayColor];
         });
         return color;
     }
@@ -469,6 +480,20 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
 {
     return _contentView;
+}
+
+- (void)zoomAtLocation:(KKSeatLocation)location animated:(BOOL)animated
+{
+    UIView *seatView = [self seatAtLocation:location];
+    CGPoint center = seatView.center;
+    [self zoomAtPoint:center scale:ZOOM_SCALE animated:animated];
+}
+
+- (void)unzoomAnimated:(BOOL)animated
+{
+    if ([self isZoomed]) {
+        [self zoomToRect:self.bounds animated:animated];
+    }
 }
 
 @end

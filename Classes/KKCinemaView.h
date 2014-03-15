@@ -13,7 +13,7 @@
 typedef enum {
     KKSeatTypeNone,
     KKSeatTypeFree,
-//    KKSeatTypeWheelChair, TODO: to be implemented
+    KKSeatTypeWheelChair,
 //    KKSeatTypeLoveSeats,  TODO: to be implemented
     KKSeatTypeReserved,
     KKSeatTypeSelected
@@ -74,13 +74,32 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 @property (nonatomic, weak) id<KKCinemaViewDelegate> delegate;
 
 /**
+ * Restrict number of selected seats. Default value is 0 which means, there is no restriction.
+ */
+@property (nonatomic, assign) NSUInteger maximumSeatsToSelect;
+
+/**
+ * Array of KKSeatLocation structures. These are wrapped in NSValue object. Call *seatLocationValue*
+ * to obtain structure directly from NSValue.
+ */
+@property (nonatomic, readonly) NSArray* locationsOfSelectedSeats;
+
+/**
+ * This will zoom in and out automatically after first and last seat selection. To zoom out
+ * properly, you must set maximumSeatsToSelect.
+ */
+@property (nonatomic, assign) BOOL zoomAutomatically;
+
+/**
  * Forces KKCinemaView to reload it's data using dataSource and redraw whole seat layout
  */
 - (void)reloadData;
 
+- (void)zoomAtLocation:(KKSeatLocation)location animated:(BOOL)animated;
+- (void)unzoomAnimated:(BOOL)animated;
+
 //TODO:
 //- add property for seat drawing block
-//- delegate to handle interaction with view
 //- defautl edge insests as property
 
 @end

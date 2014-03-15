@@ -10,6 +10,8 @@
 
 @interface KKCinemaViewController ()
 
+@property (nonatomic, weak) IBOutlet UIStepper* <#property name#>;
+
 @end
 
 @implementation KKCinemaViewController
@@ -17,6 +19,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    self.cinemaView.maximumSeatsToSelect = 4;
+    self.cinemaView.zoomAutomatically = YES;
     
     [self.cinemaView reloadData];
 }
@@ -37,7 +42,7 @@
 
 - (CGFloat)cinemaView:(KKCinemaView*)cinemaView interRowSpacingForRow:(NSUInteger)row
 {
-    return row * 2;
+    return 2;
 }
 
 - (CGFloat)interColSpacingInCinemaView:(KKCinemaView *)cinemaView
@@ -48,16 +53,15 @@
 - (KKSeatType)cinemaView:(KKCinemaView *)cinemaView seatTypeForLocation:(KKSeatLocation)location
 {
     if (location.row == 0 || location.row == 9) {
-        if (location.col < 2 || location.col > 11) {
+        
+        if (location.col == 7 || location.col == 8) {
+            return KKSeatTypeWheelChair;
+        }
+        if (location.col < 2 || location.col > 12) {
             return KKSeatTypeNone;
         }
     }
-    
-    if (location.row % 2 == 0) {
-        return KKSeatTypeFree;
-    }
-    else
-        return KKSeatTypeSelected;
+    return KKSeatTypeFree;
 }
 
 @end
