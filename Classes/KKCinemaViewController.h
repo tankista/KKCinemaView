@@ -10,7 +10,7 @@
 
 #import "KKCinemaView.h"
 
-@interface KKCinemaViewController : UIViewController <KKCinemaViewDataSource>
+@interface KKCinemaViewController : UIViewController <KKCinemaViewDataSource, KKCinemaViewDelegate>
 
 @property (nonatomic, weak) IBOutlet KKCinemaView* cinemaView;
 

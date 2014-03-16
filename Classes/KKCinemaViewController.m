@@ -10,7 +10,7 @@
 
 @interface KKCinemaViewController ()
 
-@property (nonatomic, weak) IBOutlet UIStepper* <#property name#>;
+//@property (nonatomic, weak) IBOutlet UIStepper* <#property name#>;
 
 @end
 
@@ -28,7 +28,6 @@
 
 #pragma mark
 #pragma mark KKCinemaViewDataSource Methods
-
 
 - (NSUInteger)numberOfRowsInCinemaView:(KKCinemaView*)cinemaView
 {
@@ -62,6 +61,34 @@
         }
     }
     return KKSeatTypeFree;
+}
+
+#pragma mark
+#pragma mark KKCinemaViewDelegate Methods
+
+- (BOOL)cinemaView:(KKCinemaView*)view shouldSelectSeatAtLocation:(KKSeatLocation)location
+{
+    return YES;
+}
+
+- (BOOL)cinemaView:(KKCinemaView*)view shouldDeselectSeatAtLocation:(KKSeatLocation)location
+{
+    return YES;
+}
+
+- (void)cinemaView:(KKCinemaView*)view didSelectSeatAtLocation:(KKSeatLocation)location
+{
+    NSLog(@"Did select: %@", NSStringFromKKSeatLocation(location));
+}
+
+- (void)cinemaView:(KKCinemaView*)view didDeselectSeatAtLocation:(KKSeatLocation)location
+{
+    NSLog(@"Did deselect: %@", NSStringFromKKSeatLocation(location));
+}
+
+- (void)scrollViewDidZoom:(UIScrollView *)scrollView
+{
+    NSLog(@"Did zoom");
 }
 
 @end

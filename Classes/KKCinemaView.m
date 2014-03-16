@@ -80,6 +80,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     CGSize                  _seatSize;
     CGSize                  _cinemaSize;            //calculated after reloadData
+    
+    id <KKCinemaViewDelegate> _realDelegate;        //helper delegate to forward all delegate methos
 }
 
 - (void)awakeFromNib
@@ -113,7 +115,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _contentView.clipsToBounds = YES;
     [self addSubview:_contentView];
     
-    self.delegate = self;   //TODO: create delegate proxy here
+    //self.delegate = self;   //TODO: create delegate proxy here
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor
@@ -494,6 +496,34 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     if ([self isZoomed]) {
         [self zoomToRect:self.bounds animated:animated];
     }
+}
+
+#pragma mark
+#pragma mark Delegate Forwarding Methods
+
+- (void)setDelegate:(id<KKCinemaViewDelegate>)delegate
+{
+    _realDelegate = delegate;
+    [super setDelegate:self];
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+    if (aSelector == @selector(viewForZoomingInScrollView:)) {
+        return YES;
+    }
+    else if ([_realDelegate respondsToSelector:aSelector]) {
+        return YES;
+    }
+    return [super respondsToSelector:aSelector];
+}
+
+- (id)forwardingTargetForSelector:(SEL)aSelector
+{
+    if ([_realDelegate respondsToSelector:aSelector]) {
+        return _realDelegate;
+    }
+    return [super forwardingTargetForSelector:aSelector];
 }
 
 @end
