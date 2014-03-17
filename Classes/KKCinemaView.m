@@ -150,7 +150,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     }
     
     //calcuclate seat size
-    CGFloat seatWidth = floorf((CGRectGetWidth(_drawingRect) - (_numberOfCols-1)*_colSpacing)/_numberOfCols);
+    CGFloat seatWidth = (CGRectGetWidth(_drawingRect) - (_numberOfCols-1)*_colSpacing)/_numberOfCols;
     CGFloat seatHeight = seatWidth;
     _seatSize = CGSizeMake(seatWidth, seatHeight);
     
@@ -474,7 +474,8 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     zoomRect.size.width  = self.frame.size.width  / scale;
     
     zoomRect.origin.x = point.x - (zoomRect.size.width  / 2.0);
-    zoomRect.origin.y = point.y - (zoomRect.size.height / 2.0);
+    zoomRect.origin.y
+    = point.y - (zoomRect.size.height / 2.0);
     
     return zoomRect;
 }
