@@ -46,8 +46,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 #define DEFAULT_ROW_SPACING 1
 
 #define MINIMUM_ZOOM_SCALE 1.0
-#define MAXIMUM_ZOOM_SCALE 3.0
-#define ZOOM_SCALE MAXIMUM_ZOOM_SCALE
 
 @interface KKCinemaView () <UIScrollViewDelegate>
 
@@ -98,9 +96,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _tapGestureRecognizer.numberOfTapsRequired = 1;
     [self addGestureRecognizer:_tapGestureRecognizer];
     
-    self.minimumZoomScale = MINIMUM_ZOOM_SCALE;
-    self.maximumZoomScale = MAXIMUM_ZOOM_SCALE;
-    
     _contentView = [[UIView alloc] initWithFrame:self.bounds];
     _contentView.backgroundColor = self.backgroundColor;
     _contentView.clipsToBounds = YES;
@@ -142,6 +137,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     CGFloat seatWidth = (CGRectGetWidth(_drawingRect) - (_numberOfCols-1)*_colSpacing)/_numberOfCols;
     CGFloat seatHeight = seatWidth;
     _seatSize = CGSizeMake(seatWidth, seatHeight);
+    
+    //zoom scales
+    self.minimumZoomScale = MINIMUM_ZOOM_SCALE;
+    self.maximumZoomScale = 44/_seatSize.width;
     
     CGFloat previousRowOriginY = _drawingRect.origin.y;
     _rowOriginsY = [[NSMutableArray alloc] initWithCapacity:_numberOfRows];
@@ -474,8 +473,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 - (void)zoomAtLocation:(KKSeatLocation)location animated:(BOOL)animated
 {
     UIView *seatView = [self seatAtLocation:location];
-    CGPoint center = seatView.center;
-    [self zoomAtPoint:center scale:ZOOM_SCALE animated:animated];
+    [self zoomAtPoint:seatView.center scale:self.maximumZoomScale animated:animated];
 }
 
 - (void)unzoomAnimated:(BOOL)animated
