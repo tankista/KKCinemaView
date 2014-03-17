@@ -10,8 +10,6 @@
 
 @interface KKCinemaViewController ()
 
-//@property (nonatomic, weak) IBOutlet UIStepper* <#property name#>;
-
 @end
 
 @implementation KKCinemaViewController
@@ -20,8 +18,9 @@
 {
     [super viewDidLoad];
     
-    self.cinemaView.maximumSeatsToSelect = 4;
+    self.cinemaView.maximumSeatsToSelect = 5;
     self.cinemaView.zoomAutomatically = YES;
+    self.cinemaView.evenOddOffsetRatio = 0.5;
     
     [self.cinemaView reloadData];
 }
@@ -31,17 +30,17 @@
 
 - (NSUInteger)numberOfRowsInCinemaView:(KKCinemaView*)cinemaView
 {
-    return 10;
+    return 16;
 }
 
 - (NSUInteger)numberOfColsInCinemaView:(KKCinemaView *)cinemaView
 {
-    return 14;
+    return 30;
 }
 
 - (CGFloat)cinemaView:(KKCinemaView*)cinemaView interRowSpacingForRow:(NSUInteger)row
 {
-    return 2;
+    return 1;
 }
 
 - (CGFloat)interColSpacingInCinemaView:(KKCinemaView *)cinemaView
@@ -49,14 +48,45 @@
     return 1;
 }
 
+static NSUInteger prev = 5;
+static NSUInteger currentRow = 0;
+
 - (KKSeatType)cinemaView:(KKCinemaView *)cinemaView seatTypeForLocation:(KKSeatLocation)location
 {
-    if (location.row == 0 || location.row == 9) {
-        
-        if (location.col == 7 || location.col == 8) {
-            return KKSeatTypeWheelChair;
+    if (location.row < 10) {
+        NSUInteger noneSeats = prev;
+        if (location.row != currentRow && location.row%2 == 0) {
+            noneSeats = prev;
+            prev--;
+            currentRow+=2;
         }
-        if (location.col < 2 || location.col > 12) {
+        
+        if (location.col < noneSeats) {
+            return KKSeatTypeNone;
+        }
+        
+        NSUInteger freeSeats = 19 + location.row;
+        
+        if (location.col < noneSeats + freeSeats) {
+            return KKSeatTypeFree;
+        }
+        
+        return KKSeatTypeNone;
+    }
+    if (location.row == 11 || location.row == 13) {
+        if (location.col == 0 || location.col > 28) {
+            return KKSeatTypeNone;
+        }
+        return KKSeatTypeFree;
+    }
+    if (location.row == 10 || location.row == 12) {
+        if (location.col == 0 || location.col > 27) {
+            return KKSeatTypeNone;
+        }
+        return KKSeatTypeFree;
+    }
+    if (location.row == 14) {
+        if (location.col == 29) {
             return KKSeatTypeNone;
         }
     }
@@ -88,7 +118,7 @@
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
-    NSLog(@"Did zoom");
+    
 }
 
 @end

@@ -63,25 +63,23 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 {
     UIView*                 _contentView;
     
-    UIEdgeInsets            _edgeInsets;    //this insets drawing rect from view's edges
+    UIEdgeInsets            _edgeInsets;    //this insets drawing rect from view's edges    //TODO: make public property
     CGRect                  _drawingRect;   //Frame, where seat layout is drawn (rect minus _edgeInsets)
     
     NSUInteger              _numberOfRows;
     NSUInteger              _numberOfCols;
     
-    UIPanGestureRecognizer* _panGestureRecognizer;
     UITapGestureRecognizer* _tapGestureRecognizer;
     
     NSMutableArray*         _rowOriginsY;
     CGFloat                 _colSpacing;
     
-    NSUInteger              _panGestureRowIndex;
-    NSUInteger              _panGestureColIndex;
-    
     CGSize                  _seatSize;
     CGSize                  _cinemaSize;            //calculated after reloadData
     
     id <KKCinemaViewDelegate> _realDelegate;        //helper delegate to forward all delegate methos
+    
+    CGFloat                 _evenOddOffset; //TODO: go to public property
 }
 
 - (void)awakeFromNib
@@ -96,13 +94,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     
     _edgeInsets = UIEdgeInsetsMake(30, 20, 30, 20);
     
-//    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
-//    _panGestureRecognizer.maximumNumberOfTouches = 1;
-//    [self addGestureRecognizer:_panGestureRecognizer];
-    
-    _panGestureColIndex = NSNotFound;
-    _panGestureRowIndex = NSNotFound;
-    
     _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
     _tapGestureRecognizer.numberOfTapsRequired = 1;
     [self addGestureRecognizer:_tapGestureRecognizer];
@@ -114,8 +105,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _contentView.backgroundColor = self.backgroundColor;
     _contentView.clipsToBounds = YES;
     [self addSubview:_contentView];
-    
-    //self.delegate = self;   //TODO: create delegate proxy here
 }
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor
@@ -158,7 +147,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _rowOriginsY = [[NSMutableArray alloc] initWithCapacity:_numberOfRows];
     
     
-    for (int row = 0; row < _numberOfRows; row++) {
+    for (NSUInteger row = 0; row < _numberOfRows; row++) {
     
         CGFloat previousColOriginX = _drawingRect.origin.x;
         
@@ -180,7 +169,10 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         seatRect.origin.y = rowOriginY;
         seatRect.size = _seatSize;
 
-        for (int col = 0; col < _numberOfCols; col++) {
+        //even odd row offset
+        CGFloat evenOddRowOffset = [self evenOddOffsetForRow:row];
+        
+        for (NSUInteger col = 0; col < _numberOfCols; col++) {
             
             CGFloat colOriginX = previousColOriginX;
             if (col > 0) {
@@ -188,7 +180,7 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
             }
             previousColOriginX = colOriginX;
             
-            seatRect.origin.x = colOriginX + col * _seatSize.width;
+            seatRect.origin.x = colOriginX + col * _seatSize.width + evenOddRowOffset;
             
             KKSeatLocation location;
             location.row = row;
@@ -226,20 +218,12 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     _contentView.frame = contentRect;
 }
 
-- (NSMutableArray *)selectedSeatLocations
-{
-    if (_selectedSeatLocations == nil) {
-        _selectedSeatLocations = [[NSMutableArray alloc] init];
-    }
-    return _selectedSeatLocations;
-}
+#pragma mark
+#pragma mark Public Methods
 
-- (NSMutableDictionary *)seatViews
+- (void)setEvenOddOffsetRatio:(CGFloat)evenOddOffsetRatio
 {
-    if (_seatViews == nil) {
-        _seatViews = [[NSMutableDictionary alloc] init];
-    }
-    return _seatViews;
+    _evenOddOffset = MIN(1.0, MAX(-1.0, evenOddOffsetRatio));
 }
 
 - (NSArray *)locationsOfSelectedSeats
@@ -249,32 +233,6 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 
 #pragma mark
 #pragma mark Private Methods
-
-- (void)panGestureRecognized:(UIPanGestureRecognizer*)recognizer
-{
-    /**
-     TODO:
-     - check if location is out of drawing bounds (within edge insets and last drawed row of seats)
-     - dispatch selection/deselection of same seat only once at a time (pan gesture is called after each panning)
-     */
-    
-    CGPoint panPoint = [recognizer locationInView:self];
-    
-    if ([recognizer state] == UIGestureRecognizerStateBegan) {
-        _panGestureRowIndex = [self rowIndexAtPoint:panPoint];
-    }
-    
-    if ([recognizer state] == UIGestureRecognizerStateChanged) {
-        _panGestureColIndex = [self colIndexAtPoint:panPoint];
-        KKSeatLocation location = {_panGestureRowIndex, _panGestureColIndex};
-        [self didSelectSeatAtLocation:location];
-    }
-    
-    if ([recognizer state] == UIGestureRecognizerStateRecognized || [recognizer state] == UIGestureRecognizerStateCancelled) {
-        _panGestureColIndex = NSNotFound;
-        _panGestureRowIndex = NSNotFound;
-    }
-}
 
 - (void)tapGestureRecognized:(UITapGestureRecognizer*)recognizer
 {
@@ -366,9 +324,12 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
     }
 }
 
-- (UIView*)seatAtLocation:(KKSeatLocation)location
+- (NSMutableDictionary *)seatViews
 {
-    return [self.seatViews objectForKey:NSStringFromKKSeatLocation(location)];
+    if (_seatViews == nil) {
+        _seatViews = [[NSMutableDictionary alloc] init];
+    }
+    return _seatViews;
 }
 
 - (UIColor*)colorForSeatType:(KKSeatType)type
@@ -430,7 +391,11 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
 {
     NSUInteger colIndex = NSNotFound;
     for (int col = 0; col < _numberOfCols; col++) {
-        CGFloat cumColSpacing = (col > 0 && col < _numberOfCols) ? col * _colSpacing * self.zoomScale : 0;
+        CGFloat cumColSpacing = (col > 0 && col < _numberOfCols) ? col * (_colSpacing * self.zoomScale) : 0;
+        if (_evenOddOffset > 0) {
+            NSUInteger row = [self rowIndexAtPoint:point];
+            cumColSpacing += [self evenOddOffsetForRow:row];
+        }
         CGFloat colOriginX = _edgeInsets.left * self.zoomScale + col * _seatSize.width * self.zoomScale + cumColSpacing;
         if (colOriginX + _seatSize.width * self.zoomScale > point.x) {
             colIndex = col;
@@ -450,6 +415,27 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location)
         return (KKSeatLocation){row, col};
     }
     return KKSeatLocationInvalid;
+}
+
+- (UIView*)seatAtLocation:(KKSeatLocation)location
+{
+    return [self.seatViews objectForKey:NSStringFromKKSeatLocation(location)];
+}
+
+- (NSMutableArray *)selectedSeatLocations
+{
+    if (_selectedSeatLocations == nil) {
+        _selectedSeatLocations = [[NSMutableArray alloc] init];
+    }
+    return _selectedSeatLocations;
+}
+
+- (CGFloat)evenOddOffsetForRow:(NSUInteger)row
+{
+    if (_evenOddOffset != 0 && row%2 == 0)
+        return (_evenOddOffset * _seatSize.width + _colSpacing/2) * self.zoomScale;
+    else
+        return 0;
 }
 
 #pragma mark

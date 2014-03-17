@@ -91,16 +91,18 @@ NSString* NSStringFromKKSeatLocation(KKSeatLocation location);
 @property (nonatomic, assign) BOOL zoomAutomatically;
 
 /**
+ * Offset every even seat row by specified offset ratio. Ratio is calculated relatively to seat width.
+ * Use values between -1.0 to 1.0, where 0.5 means half of seat with. Default value is 0.
+ */
+@property (nonatomic, assign) CGFloat evenOddOffsetRatio;
+
+/**
  * Forces KKCinemaView to reload it's data using dataSource and redraw whole seat layout
  */
 - (void)reloadData;
 
 - (void)zoomAtLocation:(KKSeatLocation)location animated:(BOOL)animated;
 - (void)unzoomAnimated:(BOOL)animated;
-
-//TODO:
-//- add property for seat drawing block
-//- defautl edge insests as property
 
 @end
 
